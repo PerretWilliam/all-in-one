@@ -19,18 +19,6 @@ An all-in-one converter that lets you transform video, audio and image files, an
 
 ---
 
-## 📂 Project structure (example)
-
-online_convertor/
-│── backend/ # API server (Node.js) and helpers
-│── frontend/ # Frontend (React + Vite)
-│── img/ # Project images used in README and UI
-│── LICENSE # MIT license
-│── README.md # This file
-│── .gitignore
-
----
-
 ## ⚙️ Installation
 
 ### 1. Clone the repository
