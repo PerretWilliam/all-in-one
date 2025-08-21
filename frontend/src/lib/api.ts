@@ -22,7 +22,7 @@ import { API } from "@/lib/constants";
  * helpful error message on non-OK responses.
  */
 export async function postConvert(
-  endpoint: "/audio/convert" | "/video/convert",
+  endpoint: "/audio/convert" | "/video/convert" | "/doc/convert",
   file: File,
   headers: Record<string, string>
 ): Promise<Blob> {

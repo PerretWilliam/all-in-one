@@ -29,7 +29,7 @@ export function Sidebar({ selected, setSelected, converters }: SidebarProps) {
   // Local grouping of converter keys into sections. Adjust the arrays to
   // change which converters appear in each group.
   const categories = {
-    media: ["image", "audio", "video"],
+    media: ["image", "audio", "video", "docs"],
     youtube: ["ytdlAudio", "ytdlVideo"],
   };
 

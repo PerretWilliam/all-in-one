@@ -10,17 +10,7 @@ import { existsSync } from "fs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Paths:
-// this file:    <repo>/backend/plugins/static.ts
-// backend dir:  <repo>/backend
-// project root: <repo>/frontend
-const BACKEND_DIR = resolve(__dirname, "..");
-const PROJECT_ROOT = resolve(__dirname, "../../frontend");
-
-// Prefer a node_modules that actually exists (frontend root first, then backend)
-const NM_ROOT = resolve(PROJECT_ROOT, "node_modules");
-const NM_BACK = resolve(BACKEND_DIR, "node_modules");
-const NODE_MODULES = existsSync(NM_ROOT) ? NM_ROOT : NM_BACK;
+const NODE_MODULES = resolve(__dirname, "../node_modules");
 
 function must(path: string) {
   if (!existsSync(path)) {

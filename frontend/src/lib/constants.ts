@@ -1,4 +1,9 @@
-import type { AudioFormat, ImageFormat, VideoFormat } from "@/lib/types";
+import type {
+  AudioFormat,
+  DocFormat,
+  ImageFormat,
+  VideoFormat,
+} from "@/lib/types";
 
 // APP Utils
 export const APP_NAME = "All In One";
@@ -26,3 +31,13 @@ export const VIDEO_FORMATS: VideoFormat[] = [
 
 // Image
 export const IMAGE_FORMATS: ImageFormat[] = ["jpeg", "png", "webp", "avif"];
+
+// Document
+export const DOC_FORMATS: DocFormat[] = [
+  "pdf",
+  "docx",
+  "odt",
+  "rtf",
+  "html",
+  "txt",
+];

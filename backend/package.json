@@ -1,7 +1,7 @@
 {
-  "name": "backend",
+  "name": "all_in_one_backend",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "William Perret",
     "email": "william.perret@hotmail.com"
@@ -20,18 +20,23 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch server.ts",
-    "start": "node dist/server.js",
+    "start": "node --enable-source-maps dist/server.js",
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@fastify/cors": "^11.1.0",
     "@fastify/multipart": "^9.0.3",
     "@fastify/static": "^8.2.0",
+    "@jsquash/avif": "^2.1.1",
+    "@jsquash/jpeg": "^1.6.0",
+    "@jsquash/png": "^3.1.1",
+    "@jsquash/webp": "^1.5.0",
     "fastify": "^5.5.0",
     "fastify-multipart": "^5.3.1",
     "fastify-static": "^4.6.1",
     "ffmpeg-static": "5.2.0",
     "pino": "^9.9.0",
+    "soffice": "^1.1.0",
     "youtube-dl-exec": "^3.0.24"
   },
   "devDependencies": {

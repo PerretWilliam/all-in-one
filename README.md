@@ -13,7 +13,7 @@ An all-in-one converter that lets you transform video, audio and image files, an
 - 📂 Local file conversions:
   - Video → Video (change format, quality, resolution, etc.)
   - Audio → Audio (change format, bitrate, etc.)
-  - Images → (JPEG, PNG, WebP, AVIF, etc.)
+  - Images → (JPEG, PNG, WebP, AVIF, etc.)a
 - ⚡ Modern frontend with React + Vite + TailwindCSS + shadcn/ui
 - 🛠️ Optional backend (Node.js + Fastify/Express + FFmpeg) for heavier jobs and YouTube downloading
 
@@ -65,6 +65,39 @@ npm run dev
 ```
 
 By default the frontend runs at: http://localhost:5173 (Vite) unless configured otherwise
+
+---
+
+## 🛠️ Docker Cheatsheet
+
+- **Stop backend**
+
+  ```bash
+  docker compose down
+  ```
+
+- **See logs**
+
+  ```bash
+  docker compose logs -f
+  ```
+
+- **Rebuild after code changes**
+
+  ```bash
+  docker compose up --build
+  ```
+
+- **Remove containers, images and volumes (free disk space)**
+
+  ```bash
+  docker system prune -a --volumes
+  ```
+
+- **Check Docker disk usage**
+  ```bash
+  docker system df
+  ```
 
 ---
 

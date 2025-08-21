@@ -20,10 +20,12 @@ import audioRoutes from "./routes/audio.js";
 import videoRoutes from "./routes/video.js";
 import ytdlAudioRoutes from "./routes/ytdlAudio.js";
 import ytdlVideoRoutes from "./routes/ytdlVideo.js";
+import docRoutes from "./routes/doc.js";
 
 // Server configuration
 const ORIGIN = process.env.FRONT_ORIGIN || "http://localhost:5173";
 const PORT = Number(process.env.PORT || 3001);
+const HOST = process.env.HOST || "0.0.0.0";
 
 async function buildServer() {
   const app = Fastify({ logger: true });
@@ -43,6 +45,7 @@ async function buildServer() {
   await app.register(videoRoutes, { prefix: "/video" });
   await app.register(ytdlAudioRoutes, { prefix: "/youtube" });
   await app.register(ytdlVideoRoutes, { prefix: "/youtube" });
+  await app.register(docRoutes, { prefix: "/doc" });
 
   // Healthcheck
   app.get("/health", async () => ({ ok: true }));
@@ -51,7 +54,7 @@ async function buildServer() {
 }
 
 const app = await buildServer();
-app.listen({ port: PORT }, (err, address) => {
+app.listen({ port: PORT, host: HOST }, (err, address) => {
   if (err) {
     app.log.error(err);
     process.exit(1);

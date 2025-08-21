@@ -21,6 +21,7 @@ export function Footer({ onNavigate }: FooterProps) {
       { label: "FFmpeg", href: "https://ffmpeg.org" },
       { label: "yt-dlp", href: "https://github.com/yt-dlp/yt-dlp" },
       { label: "Squoosh", href: "https://squoosh.app" },
+      { label: "LibreOffice", href: "https://www.libreoffice.org" },
     ],
     legal: [
       { label: "Privacy Policy", href: "/privacy", key: "privacy" },

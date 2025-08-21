@@ -4,6 +4,7 @@ import {
   Music2Icon,
   ClapperboardIcon,
   YoutubeIcon,
+  FileTextIcon,
 } from "lucide-react";
 
 import { ImageConverter } from "@/components/image/ImageConverter";
@@ -18,6 +19,7 @@ import { Header } from "@/components/layout/Header.tsx";
 import { Footer } from "./components/layout/Footer.tsx";
 import Privacy from "./components/pages/Privacy.tsx";
 import Terms from "./components/pages/Terms.tsx";
+import DocConverter from "./components/docs/DocConverter.tsx";
 
 export default function App() {
   const [selected, setSelected] = useState("image");
@@ -52,6 +54,12 @@ export default function App() {
       label: "YouTube → Vidéo",
       icon: <YoutubeIcon className="h-4 w-4 mr-2" />,
       component: <YtToVideoConverter />,
+    },
+    {
+      key: "docs",
+      label: "Documents",
+      icon: <FileTextIcon className="h-4 w-4 mr-2" />,
+      component: <DocConverter />,
     },
     // hidden pages, will not appear in the sidebar but can be shown via Footer
     {
