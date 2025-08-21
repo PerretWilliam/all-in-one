@@ -101,9 +101,26 @@ By default the frontend runs at:
   docker system prune -a --volumes
   ```
 
+- **Remove specific volumes**
+
+cl
+
 - **Check Docker disk usage**
+
   ```bash
   docker system df
+  ```
+
+- **Check volumes**
+
+  ```bash
+  docker volume ls
+  ```
+
+- **Check used disk space**
+
+  ```bash
+  docker system df # -v for verbose
   ```
 
 ---
