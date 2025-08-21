@@ -1,8 +1,21 @@
-# 🔄 All-in-One Converter
+<h1 align="center">🔄 All-in-One Converter</h1>
 
-An all-in-one converter that lets you transform video, audio and image files, and download/convert YouTube videos to audio or video formats.
+<p align="center">
+  <b>Convert • Compress • Transform</b> your <br>
+  🎵 Audio • 🎬 Video • 🖼️ Images • 📄 Documents <br>
+  with a sleek interface and powerful backend.
+</p>
 
-![Logo](./img/logo.png)
+<p align="center">
+  <img src="./img/logo.png" alt="All-in-One Converter Logo" width="150" />
+</p>
+
+<p align="center">
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-18+-green?logo=node.js&logoColor=white" alt="Node.js" /></a>
+  <a href="https://ffmpeg.org/"><img src="https://img.shields.io/badge/FFmpeg-ready-blue?logo=ffmpeg&logoColor=white" alt="FFmpeg" /></a>
+  <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-frontend-yellow?logo=vite&logoColor=white" alt="Vite" /></a>
+  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-supported-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
+</p>
 
 ---
 
