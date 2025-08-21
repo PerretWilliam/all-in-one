@@ -46,35 +46,42 @@ npm install
 
 ---
 
-## ▶️ Run locally
+## **▶️ Run locally with Docker (Backend) + Vite (Frontend)**
 
-### 1. Start the backend (if used)
+### **1. Start the backend (Docker only)**
 
-```bash
-cd backend
+From the project root:
+
+```
+docker compose up --build
+```
+
+By default the backend API runs at:
+
+👉 http://localhost:3001
+
+Logs will be visible in your terminal.
+
+You can stop it anytime with:
+
+```
+docker compose down
+```
+
+### **2. Start the frontend**
+
+```
+# In frontend folder
 npm run dev
 ```
 
-By default the API runs at: http://localhost:3001
+By default the frontend runs at:
 
-### 2. Start the frontend
-
-```bash
-cd .
-npm run dev
-```
-
-By default the frontend runs at: http://localhost:5173 (Vite) unless configured otherwise
+👉 http://localhost:5173
 
 ---
 
 ## 🛠️ Docker Cheatsheet
-
-- **Stop backend**
-
-  ```bash
-  docker compose down
-  ```
 
 - **See logs**
 
