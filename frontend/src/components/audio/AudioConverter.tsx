@@ -1,17 +1,21 @@
 // src/components/audio/AudioConverter.tsx
-// Component that wires together the audio drop area, controls and action bar.
+// High-level component composed of a file drop area, audio controls and an action bar.
 
 import { useState } from "react";
+import type { AudioFormat } from "@/lib/types";
+
+// Hooks
+import { useAudioConvertBatch } from "@/hooks/useAudioConvertBatch";
+
+// Presentation / UI pieces
 import { DropArea } from "@/components/common/DropArea";
-import { useAudioConvert } from "../../hooks/useAudioConvert";
 import { AudioControls } from "@/components/audio/AudioControls";
 import { ActionBar } from "@/components/common/ActionBar";
-import type { AudioFormat } from "@/lib/types";
 
 /**
  * AudioConverter
  * High-level component composing:
- * - a DropArea to receive an input audio file,
+ * - a DropArea to receive input audio files,
  * - AudioControls to choose format and bitrate,
  * - ActionBar to trigger conversion and download the result.
  *
@@ -19,56 +23,40 @@ import type { AudioFormat } from "@/lib/types";
  * conversion logic to the `useAudioConvert` hook.
  */
 export default function AudioConverter() {
-  // Currently selected input file (or null when none selected)
-  const [file, setFile] = useState<File | null>(null);
-
-  // Desired output format. Default to 'mp3'.
+  // Output format chosen by the user. Keep a typed default to avoid undefined.
   const [format, setFormat] = useState<AudioFormat>("mp3");
 
-  // Target audio bitrate (in kbps). This value is ignored for lossless
-  // formats such as 'wav' by the backend, but kept here for UI control.
+  // Target bitrate in kilobits per second. UI-level only; backend decides applicability.
+  // Note: some formats (e.g. 'wav') are lossless and may ignore this value.
   const [bitrate, setBitrate] = useState(192);
 
-  // Base name for the output file (without extension). Defaults to 'output'.
-  const [outName, setOutName] = useState("output");
+  // Files selected by the user via the DropArea component.
+  // This component intentionally stores File objects and passes them to the hook.
+  const [files, setFiles] = useState<File[]>([]);
 
-  // Hook providing conversion state and functions:
-  // - busy: whether a conversion is in progress
-  // - outUrl: URL of the converted file when ready
-  // - setOutUrl: setter to clear or set the output URL
-  // - convert: function to perform the conversion (file, format, bitrate)
-  const { busy, outUrl, setOutUrl, convert } = useAudioConvert();
+  // Hook that performs batch conversion and exposes busy state + resulting zip URL.
+  const { busy, zipUrl, convert } = useAudioConvertBatch();
 
-  /**
-   * Handler invoked when the user clicks the Convert button.
-   * Performs a no-op if no file is selected. Delegates conversion to the hook.
-   */
-  async function onConvert() {
-    if (!file) return;
-    // The conversion runs on the backend via the useAudioConvert hook.
-    await convert(file, format, bitrate);
-  }
+  // Convert handler: thin wrapper that delegates to the hook. Keep this component free
+  // of conversion implementation details so tests and UI remain simple.
 
   return (
     <div className="space-y-6">
-      {/* Drop area for selecting an audio file. When a file is chosen:
-          - update local file state
-          - clear any previous output URL
-          - set a sensible default output filename based on the input name
+      {/*
+        DropArea
+        - Accepts audio files only
+        - Calls `setFiles` with an array of File objects when user selects or drops files
+        - `selected` prop keeps the UI in sync with local state
       */}
       <DropArea
         accept={{ "audio/*": [] }}
-        onFile={(f) => {
-          setFile(f);
-          setOutUrl(null);
-          setOutName(f.name.replace(/\.[^.]+$/, "") || "output");
-        }}
-        labelIdle="Drag and drop an audio file or click to select"
-        labelActive="Drop the audio file here..."
-        selected={file}
+        onFiles={setFiles}
+        labelIdle="Drag and drop audio files or click to select"
+        labelActive="Drop audio files here..."
+        selected={files}
       />
 
-      {/* Controls for format and bitrate. Disabled while busy. */}
+      {/* Controls for selecting format and bitrate. Disabled while conversion is running. */}
       <AudioControls
         format={format}
         setFormat={setFormat}
@@ -79,12 +67,20 @@ export default function AudioConverter() {
 
       {/* Action bar: shows convert/download actions. The download name
           is composed from the chosen base name and the selected format. */}
+      {/*
+        ActionBar
+        - Shows Convert button when files are present
+        - Shows Download link when `zipUrl` is available
+        - onConvert delegates to the conversion hook with current UI state
+      */}
       <ActionBar
         busy={busy}
-        canConvert={Boolean(file)}
-        onConvert={onConvert}
-        downloadUrl={outUrl ?? undefined}
-        downloadName={`${outName}.${format}`}
+        canConvert={files.length > 0}
+        onConvert={() => convert(files, format, bitrate)}
+        downloadUrl={zipUrl}
+        downloadName="converted-audio.zip"
+        convertLabel={files.length > 1 ? "Convert all" : "Convert"}
+        convertingLabel="Converting…"
       />
     </div>
   );

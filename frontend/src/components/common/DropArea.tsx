@@ -1,46 +1,55 @@
 // src/components/common/DropArea.tsx
-// Drop area component for file selection via drag & drop or click.
+// DropArea
+// Developer notes:
+// - Lightweight presentational component that abstracts `react-dropzone` usage.
+// - Holds no internal file persistence beyond the Files array passed to `onFiles`.
+// - Keeps markup minimal so it can be reused across converters (audio/image/video/docs).
 
-// External dependencies first
+// External libraries
 import { useDropzone } from "react-dropzone";
 import { UploadCloudIcon } from "lucide-react";
 
-// Local utilities after
+// Local utilities
 import { cn } from "@/lib/utils";
 
 /**
- * Props for the DropArea component.
- * - accept: mime/type map passed to react-dropzone
- * - onFile: callback invoked with the picked File
- * - labelIdle: text shown when not dragging
- * - labelActive: text shown while dragging a file over the area
- * - selected: optional currently selected File
+ * Props for DropArea (developer-facing):
+ * - accept: react-dropzone accept map (e.g. { 'audio/*': [] })
+ * - onFiles: callback invoked with an array of picked File objects
+ * - labelIdle: message shown when no drag is active
+ * - labelActive: message shown while user is dragging files over the area
+ * - selected: optional array of currently selected File objects for UI preview
+ * - multiple: allow selecting/dropping multiple files (defaults to true)
  */
 type Props = {
   accept: Record<string, string[]>;
-  onFile: (f: File) => void;
+  onFiles: (f: File[]) => void;
   labelIdle: string;
   labelActive: string;
-  selected?: File | null;
+  selected?: File[] | null;
+  multiple?: boolean;
 };
 
 export function DropArea({
   accept,
-  onFile,
+  onFiles,
   labelIdle,
   labelActive,
   selected,
+  multiple = true,
 }: Props) {
-  // Initialize the dropzone. We only accept a single file and forward the
-  // first dropped file to the parent via onFile.
+  // Initialize react-dropzone. Keep configuration minimal: pass-through of
+  // `multiple` and `accept`, and forward dropped files to parent via `onFiles`.
+  // Note: we intentionally forward the whole File[] so parent hooks can implement
+  // batching, naming, or validation logic.
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    multiple: false,
+    multiple,
     accept,
-    onDrop: (files) => files[0] && onFile(files[0]),
+    onDrop: (files) => files.length && onFiles(files),
   });
 
   return (
-    // The root container handles click and drag events provided by react-dropzone
+    // Root container: receives drag/click events from react-dropzone via spread props
     <div
       {...getRootProps()}
       className={cn(
@@ -61,12 +70,18 @@ export function DropArea({
           {isDragActive ? labelActive : labelIdle}
         </p>
 
-        {/* When a file is selected, show its name. Label is in English. */}
-        {selected && (
-          <p className="text-xs text-foreground mt-1">
-            File: <strong>{selected.name}</strong>
-          </p>
-        )}
+        {/* Show a short list of selected files */}
+        {selected?.length ? (
+          // Keep the preview compact: show at most 3 filenames and a count for the rest.
+          <div className="text-xs text-foreground mt-1 space-y-0.5 max-w-[28rem]">
+            {selected.slice(0, 3).map((f) => (
+              <div key={f.name} className="truncate">
+                • <strong>{f.name}</strong>
+              </div>
+            ))}
+            {selected.length > 3 && <div>+{selected.length - 3} more…</div>}
+          </div>
+        ) : null}
       </div>
     </div>
   );

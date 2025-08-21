@@ -2,7 +2,7 @@
 // Document controls used by the converter UI: select output format and view advanced notes.
 // All comments are in English.
 
-import type { DocFormat } from "@/hooks/useDocConvert";
+import type { DocFormat } from "@/lib/types";
 
 import { Info as InfoIcon } from "lucide-react";
 

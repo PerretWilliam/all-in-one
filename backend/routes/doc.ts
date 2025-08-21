@@ -1,95 +1,99 @@
-// backend/routes/doc.ts
-// Routes for document conversion using headless LibreOffice (soffice).
-import path from "path";
-import crypto from "crypto";
+// Route: batch document conversion endpoint using headless LibreOffice (soffice).
+// Developer notes: this streams a ZIP back to the client while converting each
+// uploaded document sequentially. Errors for individual files are recorded
+// inside the archive as .ERROR.txt entries; catastrophic stream errors
+// will destroy the connection.
 
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-
-import { convertWithSoffice, docMime } from "../lib/docs.js";
 import type { DocTarget } from "../lib/docs.js";
 
-import {
-  UP,
-  OUT,
-  readFileAndUnlink,
-  saveUploadToDisk,
-  unlinkSafe,
-} from "../lib/storage.js";
+// Node built-ins
+import path from "path";
+import crypto from "crypto";
+import fs from "fs/promises";
 
-export default async function docsRoutes(
+// Third-party
+import archiver from "archiver";
+
+// Local helpers
+import { convertWithSoffice } from "../lib/docs.js";
+import { UP, OUT, saveUploadToDisk, unlinkSafe } from "../lib/storage.js";
+
+export default async function docRoutes(
   app: FastifyInstance,
   _opts: FastifyPluginOptions
 ) {
-  app.post("/convert", async (req, reply) => {
-    const mp = await req.file(); // field "file"
-    if (!mp) return reply.code(400).send({ error: "No file" });
-
-    function isSupported(inputName: string, target: DocTarget) {
-      const ext = path.extname(inputName).toLowerCase();
-      const writerIn = [".doc", ".docx", ".odt", ".rtf", ".txt", ".html"];
-      const writerOut: DocTarget[] = [
-        "pdf",
-        "docx",
-        "odt",
-        "rtf",
-        "html",
-        "txt",
-      ];
-
-      // PDF → DOCX/ODT/RTF/TXT is NOT supported
-      if (ext === ".pdf") {
-        return ["pdf", "html"].includes(target); // optionally png/jpg if tu ajoutes ces cibles
-      }
-
-      if (writerIn.includes(ext)) {
-        return writerOut.includes(target);
-      }
-
-      // add calc & impress here if needed later
-      return false;
-    }
-
+  app.post("/convert-batch", async (req, reply) => {
     const target = ((req.headers["x-target"] as string) || "pdf") as DocTarget;
 
-    if (!isSupported(mp.filename, target)) {
-      return reply.code(422).send({
-        error: "unsupported-conversion",
-        detail:
-          "This conversion isn't supported by LibreOffice. Example: PDF → DOCX is not supported. Try PDF → HTML or DOCX → PDF.",
-      });
-    }
+    // Send response headers first
+    const zipId = crypto.randomUUID();
+    reply.header(
+      "Content-Disposition",
+      `attachment; filename="docs-batch-${zipId}.zip"`
+    );
+    reply.type("application/zip");
 
-    const id = crypto.randomUUID();
-    const inPath = path.join(UP, `${id}-${mp.filename}`);
-    const outPath = path.join(OUT, `${id}.${target}`);
+    // Create the ZIP archive
+    const archive = archiver("zip", { zlib: { level: 9 } });
+
+    // Fatal error during streaming -> destroy the connection
+    archive.on("error", (err: Error) => {
+      reply.log.error(err);
+      reply.raw.destroy(err);
+    });
+
+    // Send the archive stream via Fastify (ensures headers and CORS are handled)
+    reply.send(archive);
 
     try {
-      await saveUploadToDisk(mp.file, inPath);
+      const parts = req.parts();
+      for await (const part of parts) {
+        if (!(part.type === "file" && part.file && part.filename)) continue;
 
-      const produced = await convertWithSoffice(
-        inPath,
-        path.dirname(outPath),
-        target,
-        (line) => app.log.info(line)
-      );
+        const inId = crypto.randomUUID();
+        const inPath = path.join(UP, `${inId}-${part.filename}`);
+        await saveUploadToDisk(part.file, inPath);
 
-      // Clean input
-      await unlinkSafe(inPath);
+        const baseName =
+          path.parse(part.filename).name.replace(/[^\w.-]+/g, "_") || "file";
 
-      // Respond with the converted file
-      reply.header(
-        "Content-Disposition",
-        `attachment; filename="output.${target}"`
-      );
-      reply.type(docMime(target));
+        // LibreOffice writes files into a directory; provide OUT as the output dir
+        const outDir = OUT;
 
-      const buf = await readFileAndUnlink(produced);
-      return reply.send(buf);
+        try {
+          const produced = await convertWithSoffice(
+            inPath,
+            outDir,
+            target,
+            (l) => app.log.info(l)
+          );
+          await unlinkSafe(inPath);
+
+          const buf = await fs.readFile(produced);
+          archive.append(buf, { name: `${baseName}.${target}` });
+          await unlinkSafe(produced);
+        } catch (err: any) {
+          await unlinkSafe(inPath);
+          archive.append(
+            `Failed to convert ${part.filename}\n${String(
+              err?.message || err
+            )}\n`,
+            { name: `${baseName}.ERROR.txt` }
+          );
+        }
+      }
+
+      // Finalize the ZIP (this closes the response stream)
+      await archive.finalize();
+      // Do not send any further data after finalize
     } catch (e) {
-      app.log.error(e);
-      await unlinkSafe(inPath);
-      await unlinkSafe(outPath);
-      return reply.code(500).send({ error: "document convert failed" });
+      reply.log.error(e);
+      try {
+        await archive.abort();
+      } catch {}
+      // If no bytes were sent yet (rare) we could return a 500 here:
+      // if (!reply.raw.headersSent) return reply.code(500).send({ error: "doc batch convert failed" });
     }
   });
 }

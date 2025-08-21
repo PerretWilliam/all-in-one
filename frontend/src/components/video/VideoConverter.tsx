@@ -4,62 +4,51 @@
 // External imports
 import { useState } from "react";
 
-// Hook and types
-import { useVideoConvert } from "@/hooks/useVideoConvert";
+// Local Types
+import type { VideoFormat } from "@/lib/types";
+
+// Hook
+import { useVideoConvertBatch } from "@/hooks/useVideoConvertBatch";
 
 // UI components
 import { DropArea } from "@/components/common/DropArea";
 import { VideoControls } from "@/components/video/VideoControls";
 import { ActionBar } from "@/components/common/ActionBar";
 
-// Local Types
-import type { VideoFormat } from "@/lib/types";
-
 /**
  * VideoConverter
- * Composes the video DropArea, VideoControls and ActionBar. Manages local
- * UI state and delegates the actual conversion to the `useVideoConvert` hook.
+ * Combines the DropArea, VideoControls and ActionBar into a single UI.
+ * Manages local form state and delegates the conversion process to the
+ * useVideoConvertBatch hook.
  */
 export default function VideoConverter() {
-  // Selected input file
-  const [file, setFile] = useState<File | null>(null);
-
   // Conversion options with sensible defaults
-  const [format, setFormat] = useState<VideoFormat>("mp4"); // default to mp4
-  const [crf, setCrf] = useState(23);
-  const [preset, setPreset] = useState("veryfast");
-  const [audioKbps, setAudioKbps] = useState(128);
-  const [maxW, setMaxW] = useState<number | "">("");
-  const [maxH, setMaxH] = useState<number | "">("");
-  const [fps, setFps] = useState<number | "">("");
-  const [outName, setOutName] = useState("output");
+  const [format, setFormat] = useState<VideoFormat>("mp4"); // output format
+  const [crf, setCrf] = useState(23); // quality (constant rate factor)
+  const [preset, setPreset] = useState("veryfast"); // ffmpeg preset for speed/quality tradeoff
+  const [audioKbps, setAudioKbps] = useState(128); // audio bitrate in kbps
+  const [maxW, setMaxW] = useState<number | "">(""); // optional max width
+  const [maxH, setMaxH] = useState<number | "">(""); // optional max height
+  const [fps, setFps] = useState<number | "">(""); // optional target framerate
 
-  // Hook controlling conversion process and output URL
-  const { busy, outUrl, setOutUrl, convert } = useVideoConvert();
+  // Files selected by the user
+  const [files, setFiles] = useState<File[]>([]);
 
-  // Trigger conversion; no-op when no file is selected
-  async function onConvert() {
-    if (!file) return;
-    await convert(file, { format, crf, preset, audioKbps, maxW, maxH, fps });
-  }
+  // Hook controlling the conversion process and resulting download URL
+  const { busy, zipUrl, convert } = useVideoConvertBatch();
 
   return (
     <div className="space-y-6">
-      {/* File drop area. When a file is selected, update local state and
-          clear any previous output URL. */}
+      {/* File drop area: updates selected files when user drops or picks files */}
       <DropArea
         accept={{ "video/*": [] }}
-        onFile={(f) => {
-          setFile(f);
-          setOutUrl(null);
-          setOutName(f.name.replace(/\.[^.]+$/, "") || "output");
-        }}
-        labelIdle="Drag and drop a video file or click to select"
-        labelActive="Drop the video file here..."
-        selected={file}
+        onFiles={setFiles}
+        labelIdle="Drag and drop video files or click to select"
+        labelActive="Drop video files here..."
+        selected={files}
       />
 
-      {/* Controls for video options */}
+      {/* Video option controls: format, quality, preset, audio and sizing */}
       <VideoControls
         format={format}
         setFormat={setFormat}
@@ -78,13 +67,17 @@ export default function VideoConverter() {
         disabled={busy}
       />
 
-      {/* Action bar for converting and downloading the result */}
+      {/* Action bar: start conversion and download resulting ZIP when ready */}
       <ActionBar
         busy={busy}
-        canConvert={Boolean(file)}
-        onConvert={onConvert}
-        downloadUrl={outUrl ?? undefined}
-        downloadName={`${outName}.${format}`}
+        canConvert={files.length > 0}
+        onConvert={() =>
+          convert(files, { format, crf, preset, audioKbps, maxW, maxH, fps })
+        }
+        downloadUrl={zipUrl}
+        downloadName="converted-video.zip"
+        convertLabel={files.length > 1 ? "Convert all" : "Convert"}
+        convertingLabel="Converting…"
       />
     </div>
   );

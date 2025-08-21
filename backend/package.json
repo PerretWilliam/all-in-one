@@ -1,7 +1,7 @@
 {
   "name": "all_in_one_backend",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "William Perret",
     "email": "william.perret@hotmail.com"
@@ -31,15 +31,18 @@
     "@jsquash/jpeg": "^1.6.0",
     "@jsquash/png": "^3.1.1",
     "@jsquash/webp": "^1.5.0",
+    "archiver": "^7.0.1",
     "fastify": "^5.5.0",
     "fastify-multipart": "^5.3.1",
     "fastify-static": "^4.6.1",
     "ffmpeg-static": "5.2.0",
     "pino": "^9.9.0",
+    "sharp": "^0.34.3",
     "soffice": "^1.1.0",
     "youtube-dl-exec": "^3.0.24"
   },
   "devDependencies": {
+    "@types/archiver": "^6.0.3",
     "@types/node": "^24.3.0",
     "tsx": "^4.20.4",
     "typescript": "^5.9.2"

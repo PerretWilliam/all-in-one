@@ -79,3 +79,37 @@ export async function postJsonBlob(path: string, body: unknown): Promise<Blob> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return await res.blob();
 }
+
+/**
+ * Sends a batch of files to the backend for conversion.
+ *
+ * @param endpoint - The batch conversion endpoint. Must be one of:
+ *   "/audio/convert-batch", "/video/convert-batch", or "/doc/convert-batch".
+ * @param files - An array of File objects to upload. All files are sent under the same field name "file".
+ * @param headers - Additional headers to include in the request, typically used for conversion options.
+ * @returns A Promise that resolves to a Blob containing the converted files (usually a ZIP archive).
+ * @throws {Error} If the backend responds with a non-OK status, throws an error with the status and response text.
+ */
+export async function postConvertBatch(
+  endpoint:
+    | "/audio/convert-batch"
+    | "/video/convert-batch"
+    | "/doc/convert-batch"
+    | "/image/convert-batch",
+  files: File[],
+  headers: Record<string, string>
+): Promise<Blob> {
+  const form = new FormData();
+  for (const f of files) form.append("file", f); // same field name "file"
+
+  const res = await fetch(`${API}${endpoint}`, {
+    method: "POST",
+    body: form,
+    headers,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Backend error ${res.status}: ${text}`);
+  }
+  return await res.blob(); // expect application/zip
+}

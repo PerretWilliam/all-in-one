@@ -21,6 +21,7 @@ import videoRoutes from "./routes/video.js";
 import ytdlAudioRoutes from "./routes/ytdlAudio.js";
 import ytdlVideoRoutes from "./routes/ytdlVideo.js";
 import docRoutes from "./routes/doc.js";
+import imageRoutes from "./routes/image.js";
 
 // Server configuration
 const ORIGIN = process.env.FRONT_ORIGIN || "http://localhost:5173";
@@ -46,6 +47,7 @@ async function buildServer() {
   await app.register(ytdlAudioRoutes, { prefix: "/youtube" });
   await app.register(ytdlVideoRoutes, { prefix: "/youtube" });
   await app.register(docRoutes, { prefix: "/doc" });
+  await app.register(imageRoutes, { prefix: "/image" });
 
   // Healthcheck
   app.get("/health", async () => ({ ok: true }));

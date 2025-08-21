@@ -11,6 +11,7 @@
 import { useState } from "react";
 import { postJson } from "@/lib/api";
 import type { AudioFormat } from "@/lib/types";
+import { toast } from "sonner";
 
 export function useYtToAudio() {
   // Whether a conversion request is in progress
@@ -40,6 +41,24 @@ export function useYtToAudio() {
       });
       const blob = await res.blob();
       setOutUrl(URL.createObjectURL(blob));
+      toast.success("Youtube Audio export completed successfully.", {
+        style: {
+          "--normal-bg": "var(--background)",
+          "--normal-text":
+            "light-dark(var(--color-green-600), var(--color-green-400))",
+          "--normal-border":
+            "light-dark(var(--color-green-600), var(--color-green-400))",
+        } as React.CSSProperties,
+      });
+    } catch (e) {
+      toast.error("Youtube Audio export failed.", {
+        style: {
+          "--normal-bg": "var(--background)",
+          "--normal-text": "var(--destructive)",
+          "--normal-border": "var(--destructive)",
+        } as React.CSSProperties,
+      });
+      console.error(e);
     } finally {
       setBusy(false);
     }

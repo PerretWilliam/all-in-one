@@ -1,77 +1,53 @@
 // src/components/image/ImageConverter.tsx
 // High-level image conversion UI: drop area, controls, and actions.
+// Dev-focused comments in English only.
 
-// External imports
 import { useState } from "react";
 
-// Local types/utilities
-import { useImageConvert } from "@/hooks/useImageConvert";
-
-// UI components
-import { DropArea } from "@/components/common/DropArea";
-import { ImageControls } from "@/components/image/ImageControls";
-import { ActionBar } from "@/components/common/ActionBar";
-
-// Local types
 import type { ImageFormat } from "@/lib/types";
+
+import { useImageConvertBatch } from "@/hooks/useImageConvertBatch";
+
+import { DropArea } from "@/components/common/DropArea";
+import { ActionBar } from "@/components/common/ActionBar";
+import { ImageControls } from "@/components/image/ImageControls";
 
 /**
  * ImageConverter
- * Composes the UI pieces required to convert an image file:
- * - a DropArea to pick an input image
+ * Composes the UI pieces required to convert image files:
+ * - DropArea to pick input images
  * - ImageControls to select format, quality and resize options
  * - ActionBar to trigger conversion and download the result
  *
- * The component only manages UI state; conversion is handled by the
- * `useImageConvert` hook which performs the backend request.
+ * The component manages only UI state; conversion is delegated to
+ * the `useImageConvertBatch` hook which performs the backend request.
  */
 export function ImageConverter() {
-  // Selected input file (null when none)
-  const [file, setFile] = useState<File | null>(null);
+  // Selected input files (multiple files supported)
+  const [files, setFiles] = useState<File[]>([]);
 
-  // Base name for the produced file (without extension)
-  const [resultName, setResultName] = useState("output");
+  // Conversion options controlled by the UI
+  const [target, setTarget] = useState<ImageFormat>("webp"); // output format
+  const [quality, setQuality] = useState(80); // 0-100 image quality
+  const [maxWidth, setMaxWidth] = useState<number | "">(""); // optional max width
+  const [maxHeight, setMaxHeight] = useState<number | "">(""); // optional max height
+  const [keepAspect, setKeepAspect] = useState(true); // maintain aspect ratio
 
-  // Image conversion options and their local UI state
-  const [target, setTarget] = useState<ImageFormat>("webp");
-  const [quality, setQuality] = useState(80);
-  const [maxWidth, setMaxWidth] = useState<number | "">("");
-  const [maxHeight, setMaxHeight] = useState<number | "">("");
-  const [keepAspect, setKeepAspect] = useState(true);
-
-  // Hook that exposes busy state, output URL and the convert function
-  const { busy, outUrl, setOutUrl, convert } = useImageConvert();
-
-  /**
-   * Trigger conversion via the hook. No-op if no file is selected.
-   */
-  async function onConvert() {
-    if (!file) return;
-    await convert(file, {
-      target,
-      quality,
-      maxWidth,
-      maxHeight,
-      keepAspect,
-    });
-  }
+  // Hook exposing busy state, resulting zip URL and convert function
+  const { busy, zipUrl, convert } = useImageConvertBatch();
 
   return (
     <div className="space-y-6">
-      {/* Drop area: update file state and reset previous output URL */}
+      {/* Drop area: updates file list and resets previous outputs via parent handler */}
       <DropArea
         accept={{ "image/*": [] }}
-        onFile={(f) => {
-          setFile(f);
-          setOutUrl(null);
-          setResultName(f.name.replace(/\.[^.]+$/, "") || "output");
-        }}
-        labelIdle="Drag and drop an image or click to select"
-        labelActive="Drop the file here..."
-        selected={file}
+        onFiles={setFiles}
+        labelIdle="Drag and drop images or click to select"
+        labelActive="Drop the images here..."
+        selected={files}
       />
 
-      {/* Controls for format, quality and resizing */}
+      {/* Controls for format, quality and resizing (disabled while busy) */}
       <ImageControls
         target={target}
         setTarget={setTarget}
@@ -86,13 +62,22 @@ export function ImageConverter() {
         disabled={busy}
       />
 
-      {/* Action bar to start conversion and optionally download result */}
+      {/* Action bar: start conversion and optionally download the resulting zip */}
       <ActionBar
         busy={busy}
-        canConvert={Boolean(file)}
-        onConvert={onConvert}
-        downloadUrl={outUrl ?? undefined}
-        downloadName={`${resultName}.${target}`}
+        canConvert={files.length > 0}
+        onConvert={() =>
+          convert(files, {
+            format: target,
+            quality,
+            maxWidth,
+            maxHeight,
+            keepAspect,
+          })
+        }
+        downloadUrl={zipUrl}
+        downloadName="converted-images.zip"
+        convertLabel={files.length > 1 ? "Convert all" : "Convert"}
       />
     </div>
   );
